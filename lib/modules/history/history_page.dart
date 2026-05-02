@@ -17,24 +17,24 @@ class _HistoryPageState extends State<HistoryPage> {
 
   final controller = Get.find<AttendanceController>();
 
-  // 🔥 FIX: HARUS PER HARI (BUKAN BULAN)
   List<String> getEventsForDay(DateTime day) {
     return controller.getByDate(day).map((e) => e.status).toList();
   }
 
-  // 🔥 LIST TETAP PER BULAN
   List<AttendanceModel> getFilteredData() {
     final data = controller.getByMonth(selectedDay);
 
     if (selectedTab == "absen") {
-      return data;
+      return data.where((e) => e.status == "hadir").toList();
     } else if (selectedTab == "telat") {
       return data.where((e) => e.status == "telat").toList();
     } else if (selectedTab == "izin") {
       return data.where((e) => e.status == "izin").toList();
+    } else if (selectedTab == "sakit") {
+      return data.where((e) => e.status == "sakit").toList();
     }
 
-    return data;
+    return [];
   }
 
   @override
@@ -72,21 +72,16 @@ class _HistoryPageState extends State<HistoryPage> {
                               firstDay: DateTime.utc(2020),
                               lastDay: DateTime.utc(2030),
                               focusedDay: selectedDay,
-
                               selectedDayPredicate: (day) =>
                                   isSameDay(day, selectedDay),
-
                               onDaySelected: (selected, focused) {
                                 setState(() {
                                   selectedDay = selected;
                                 });
                               },
-
                               eventLoader: getEventsForDay,
 
                               calendarBuilders: CalendarBuilders(
-
-                                // 🔥 BACKGROUND
                                 defaultBuilder:
                                     (context, day, focusedDay) {
                                   final events = getEventsForDay(day);
@@ -105,7 +100,11 @@ class _HistoryPageState extends State<HistoryPage> {
                                       bgColor =
                                           Colors.orange.withOpacity(0.3);
                                       break;
-                                    case "alpha":
+                                    case "izin":
+                                      bgColor =
+                                          Colors.blue.withOpacity(0.3);
+                                      break;
+                                    case "sakit":
                                       bgColor =
                                           Colors.red.withOpacity(0.3);
                                       break;
@@ -129,7 +128,6 @@ class _HistoryPageState extends State<HistoryPage> {
                                   );
                                 },
 
-                                // 🔥 SELECTED
                                 selectedBuilder:
                                     (context, day, focusedDay) {
                                   return Container(
@@ -147,7 +145,6 @@ class _HistoryPageState extends State<HistoryPage> {
                                   );
                                 },
 
-                                // 🔥 DOT
                                 markerBuilder:
                                     (context, day, events) {
                                   if (events.isEmpty) return SizedBox();
@@ -163,7 +160,10 @@ class _HistoryPageState extends State<HistoryPage> {
                                     case "telat":
                                       color = Colors.orange;
                                       break;
-                                    case "alpha":
+                                    case "izin":
+                                      color = Colors.blue;
+                                      break;
+                                    case "sakit":
                                       color = Colors.red;
                                       break;
                                     default:
@@ -201,7 +201,8 @@ class _HistoryPageState extends State<HistoryPage> {
                               children: [
                                 legendItem(Colors.green, "Hadir"),
                                 legendItem(Colors.orange, "Telat"),
-                                legendItem(Colors.red, "Alpha"),
+                                legendItem(Colors.blue, "Izin"),
+                                legendItem(Colors.red, "Sakit"),
                               ],
                             )
                           ],
@@ -210,20 +211,33 @@ class _HistoryPageState extends State<HistoryPage> {
 
                       SizedBox(height: 20),
 
-                      // 🔹 TAB
+                      // 🔥 TAB BUTTON (UPDATED STYLE)
                       Row(
-                        mainAxisAlignment:
-                            MainAxisAlignment.spaceBetween,
                         children: [
-                          tabButton("absen", "Absen"),
-                          tabButton("telat", "Telat"),
-                          tabButton("izin", "Izin"),
+                          Expanded(
+                              child: tabButton(
+                                  "absen",
+                                  "Absen",
+                                  Icons.check_circle,
+                                  Colors.green)),
+                          SizedBox(width: 10),
+                          Expanded(
+                              child: tabButton("telat", "Telat",
+                                  Icons.warning, Colors.orange)),
+                          SizedBox(width: 10),
+                          Expanded(
+                              child: tabButton("izin", "Izin",
+                                  Icons.assignment, Colors.blue)),
+                          SizedBox(width: 10),
+                          Expanded(
+                              child: tabButton("sakit", "Sakit",
+                                  Icons.local_hospital, Colors.red)),
                         ],
                       ),
 
                       SizedBox(height: 20),
 
-                      // 🔥 LIST BULANAN
+                      // 🔥 LIST
                       Builder(
                         builder: (_) {
                           final data = getFilteredData();
@@ -263,15 +277,21 @@ class _HistoryPageState extends State<HistoryPage> {
                                   break;
                                 case "izin":
                                   color = Colors.blue;
-                                  icon = Icons.info;
+                                  icon = Icons.assignment;
+                                  break;
+                                case "sakit":
+                                  color = Colors.red;
+                                  icon = Icons.local_hospital;
                                   break;
                                 default:
-                                  color = Colors.red;
-                                  icon = Icons.close;
+                                  color = Colors.grey;
+                                  icon = Icons.help;
                               }
 
-                              return AppCard(
-                                child: ListTile(
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: AppCard(
+                                  child: ListTile(
                                   leading: Icon(icon, color: color),
                                   title: Text("$tanggal • $jam"),
                                   trailing: Text(
@@ -280,8 +300,9 @@ class _HistoryPageState extends State<HistoryPage> {
                                         color: color,
                                         fontWeight:
                                             FontWeight.bold),
+                                    ),
                                   ),
-                                ),
+                                )
                               );
                             },
                           );
@@ -298,23 +319,33 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 
-  Widget tabButton(String key, String title) {
+  // 🔥 TAB STYLE BARU
+  Widget tabButton(
+      String key, String title, IconData icon, Color color) {
     bool isActive = selectedTab == key;
 
     return GestureDetector(
-      onTap: () {
-        setState(() => selectedTab = key);
-      },
-      child: Container(
-        padding:
-            EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: isActive ? Colors.blue : Colors.grey[200],
-          borderRadius: BorderRadius.circular(20),
+      onTapDown: (_) => setState(() => selectedTab = key),
+      child: AnimatedScale(
+        scale: isActive ? 0.95 : 1.0,
+        duration: Duration(milliseconds: 150),
+        child: AppCard(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon,
+                  color: isActive ? color : Colors.grey),
+              SizedBox(width: 6),
+              Text(
+                title,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: isActive ? color : Colors.grey,
+                ),
+              ),
+            ],
+          ),
         ),
-        child: Text(title,
-            style: TextStyle(
-                color: isActive ? Colors.white : Colors.black)),
       ),
     );
   }

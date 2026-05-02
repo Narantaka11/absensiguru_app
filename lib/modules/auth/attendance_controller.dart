@@ -18,15 +18,22 @@ class AttendanceController extends GetxController {
 
   // 🔥 ambil tanggal aktif
   DateTime getCurrentDate() {
-  return selectedDummyDate ?? DateTime.now();
+    return selectedDummyDate ?? DateTime.now();
   }
 
-  // 🔥 set tanggal manual dari kalender
+  // 🔥 set tanggal manual
   void setDummyDate(DateTime date) {
-  selectedDummyDate = date;
+    selectedDummyDate = date;
   }
 
+  // 🔥 TAMBAH / UPDATE ABSENSI (ANTI DOUBLE)
   void markAttendance(DateTime date, String status) {
+    // hapus dulu kalau sudah ada di tanggal itu
+    attendanceList.removeWhere((item) =>
+        item.dateTime.year == date.year &&
+        item.dateTime.month == date.month &&
+        item.dateTime.day == date.day);
+
     attendanceList.add(
       AttendanceModel(
         dateTime: date,
@@ -37,25 +44,20 @@ class AttendanceController extends GetxController {
     attendanceList.refresh();
   }
 
+  // 🔥 STATUS HARI INI (FIXED)
   String getTodayStatus() {
-    final today = DateTime.now();
-    final todayRecords = getByMonth(today);
+    final today = getCurrentDate();
 
-    if (todayRecords.isEmpty) {
-      return "belum";
-    }
+    final todayRecords = getByDate(today);
 
-    if (todayRecords.any((item) => item.status == "hadir")) {
-      return "hadir";
-    }
+    if (todayRecords.isEmpty) return "belum";
 
-    if (todayRecords.any((item) => item.status == "telat")) {
-      return "telat";
-    }
+    final status = todayRecords.first.status;
 
-    return todayRecords.first.status;
+    return status;
   }
 
+  // 🔥 AMBIL DATA PER TANGGAL
   List<AttendanceModel> getByDate(DateTime day) {
     return attendanceList.where((item) {
       return item.dateTime.year == day.year &&
@@ -64,10 +66,20 @@ class AttendanceController extends GetxController {
     }).toList();
   }
 
+  // 🔥 AMBIL DATA PER BULAN
   List<AttendanceModel> getByMonth(DateTime month) {
     return attendanceList.where((item) {
       return item.dateTime.year == month.year &&
           item.dateTime.month == month.month;
     }).toList();
+  }
+
+  // 🔥 HELPER WARNA (UNTUK KALENDER)
+  String getStatusByDate(DateTime date) {
+    final data = getByDate(date);
+
+    if (data.isEmpty) return "tidak";
+
+    return data.first.status;
   }
 }

@@ -3,28 +3,22 @@ import 'package:get/get.dart';
 import '../../../core/widgets/app_card.dart';
 import '../auth/attendance_controller.dart';
 
-class AbsensiPage extends StatefulWidget {
-  const AbsensiPage({super.key});
+class SakitPage extends StatefulWidget {
+  const SakitPage({super.key});
 
   @override
-  State<AbsensiPage> createState() => _AbsensiPageState();
+  State<SakitPage> createState() => _SakitPageState();
 }
 
-class _AbsensiPageState extends State<AbsensiPage> {
+class _SakitPageState extends State<SakitPage> {
   final controller = Get.find<AttendanceController>();
 
-  String? fakeLocation;
+  final TextEditingController alasanController = TextEditingController();
+
   String? fakeImage;
 
   double scaleSubmit = 1.0;
-  double scaleLocation = 1.0;
   double scalePhoto = 1.0;
-
-  void getFakeLocation() {
-    setState(() {
-      fakeLocation = "Lat: -6.2000\nLng: 106.8166";
-    });
-  }
 
   void getFakePhoto() {
     setState(() {
@@ -32,31 +26,16 @@ class _AbsensiPageState extends State<AbsensiPage> {
     });
   }
 
-  String getStatus(DateTime now) {
-    final jamMasuk = DateTime(now.year, now.month, now.day, 7, 0);
-
-    if (now.isBefore(jamMasuk) || now.isAtSameMomentAs(jamMasuk)) {
-      return "hadir";
-    } else {
-      return "telat";
-    }
-  }
-
-  void submitAbsensi() {
-    if (fakeLocation == null) {
-      Get.snackbar("Error", "Ambil lokasi dulu");
+  void submitSakit() {
+    if (alasanController.text.isEmpty) {
+      Get.snackbar("Error", "Isi keterangan sakit");
       return;
     }
 
-    if (fakeImage == null) {
-      Get.snackbar("Error", "Ambil foto dulu");
-      return;
-    }
-
-    DateTime now = controller.getCurrentDate();
-    String status = getStatus(now);
-
-    controller.markAttendance(now, status);
+    controller.markAttendance(
+      controller.getCurrentDate(),
+      "sakit",
+    );
 
     Get.snackbar(
       "",
@@ -83,21 +62,21 @@ class _AbsensiPageState extends State<AbsensiPage> {
             Container(
               padding: EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: Colors.red.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.check, color: Colors.green),
+              child: Icon(Icons.local_hospital, color: Colors.red),
             ),
             SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Berhasil",
+                  Text("Data Terkirim",
                       style: TextStyle(
                           fontWeight: FontWeight.bold, fontSize: 14)),
                   SizedBox(height: 4),
-                  Text("Absensi berhasil dicatat",
+                  Text("Laporan sakit berhasil dikirim",
                       style: TextStyle(color: Colors.grey[600])),
                 ],
               ),
@@ -125,7 +104,7 @@ class _AbsensiPageState extends State<AbsensiPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("Absensi",
+                  Text("Sakit",
                       style:
                           TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                   IconButton(
@@ -142,58 +121,21 @@ class _AbsensiPageState extends State<AbsensiPage> {
                   child: Column(
                     children: [
 
-                      // 🔥 LOKASI
+                      // 🔥 FORM KETERANGAN
                       AppCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text("Lokasi",
-                                style: TextStyle(fontWeight: FontWeight.bold)),
+                            Text("Keterangan Sakit",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold)),
                             SizedBox(height: 10),
-                            Container(
-                              height: 100,
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                color: Colors.grey[200],
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Center(
-                                child: fakeLocation == null
-                                    ? Text("Belum ada lokasi")
-                                    : Text(fakeLocation!),
-                              ),
-                            ),
-                            SizedBox(height: 15),
-
-                            // 🔥 BUTTON STYLE SAMA DENGAN SUBMIT
-                            GestureDetector(
-                              onTapDown: (_) =>
-                                  setState(() => scaleLocation = 0.97),
-                              onTapUp: (_) {
-                                setState(() => scaleLocation = 1.0);
-                                getFakeLocation();
-                              },
-                              onTapCancel: () =>
-                                  setState(() => scaleLocation = 1.0),
-                              child: AnimatedScale(
-                                scale: scaleLocation,
-                                duration: Duration(milliseconds: 150),
-                                child: AppCard(
-                                  child: Center(
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(Icons.location_on,
-                                            color: Colors.blue),
-                                        SizedBox(width: 10),
-                                        Text("Ambil Lokasi",
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold)),
-                                      ],
-                                    ),
-                                  ),
-                                ),
+                            TextField(
+                              controller: alasanController,
+                              maxLines: 4,
+                              decoration: InputDecoration(
+                                hintText: "Masukkan keterangan sakit...",
+                                border: InputBorder.none,
                               ),
                             ),
                           ],
@@ -202,14 +144,16 @@ class _AbsensiPageState extends State<AbsensiPage> {
 
                       SizedBox(height: 20),
 
-                      // 🔥 FOTO
+                      // 🔥 FOTO (BUKTI)
                       AppCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text("Foto Selfie",
-                                style: TextStyle(fontWeight: FontWeight.bold)),
+                            Text("Upload Bukti (Opsional)",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold)),
                             SizedBox(height: 10),
+
                             Container(
                               height: 150,
                               width: double.infinity,
@@ -220,16 +164,18 @@ class _AbsensiPageState extends State<AbsensiPage> {
                               child: fakeImage == null
                                   ? Center(child: Text("Belum ada foto"))
                                   : ClipRRect(
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius:
+                                          BorderRadius.circular(12),
                                       child: Image.network(
                                         fakeImage!,
                                         fit: BoxFit.cover,
                                       ),
                                     ),
                             ),
+
                             SizedBox(height: 15),
 
-                            // 🔥 BUTTON STYLE SAMA
+                            // 🔥 BUTTON FOTO (STYLE SAMA)
                             GestureDetector(
                               onTapDown: (_) =>
                                   setState(() => scalePhoto = 0.97),
@@ -249,7 +195,7 @@ class _AbsensiPageState extends State<AbsensiPage> {
                                           MainAxisAlignment.center,
                                       children: [
                                         Icon(Icons.camera_alt,
-                                            color: Colors.blue),
+                                            color: Colors.red),
                                         SizedBox(width: 10),
                                         Text("Ambil Foto",
                                             style: TextStyle(
@@ -273,7 +219,7 @@ class _AbsensiPageState extends State<AbsensiPage> {
                         },
                         onTapUp: (_) {
                           setState(() => scaleSubmit = 1.0);
-                          submitAbsensi();
+                          submitSakit();
                         },
                         onTapCancel: () {
                           setState(() => scaleSubmit = 1.0);
@@ -287,12 +233,14 @@ class _AbsensiPageState extends State<AbsensiPage> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.fingerprint,
-                                      color: Colors.blue),
+                                  Icon(Icons.local_hospital,
+                                      color: Colors.red),
                                   SizedBox(width: 10),
-                                  Text("Submit Absensi",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold))
+                                  Text(
+                                    "Kirim Laporan Sakit",
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold),
+                                  )
                                 ],
                               ),
                             ),

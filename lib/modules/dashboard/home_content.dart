@@ -4,6 +4,9 @@ import 'package:carousel_slider/carousel_slider.dart';
 import '../../../core/widgets/app_card.dart';
 import '../absensi/absensi_page.dart';
 import '../auth/attendance_controller.dart';
+import '../auth/dashboard_controller.dart';
+import '../absensi/izin_page.dart';
+import '../absensi/sakit_page.dart';
 
 class HomeContent extends StatefulWidget {
   const HomeContent({super.key});
@@ -14,6 +17,7 @@ class HomeContent extends StatefulWidget {
 
 class _HomeContentState extends State<HomeContent> {
   double scale = 1.0;
+  int currentBanner = 0;
 
   final controller = Get.find<AttendanceController>();
 
@@ -51,13 +55,21 @@ class _HomeContentState extends State<HomeContent> {
                 Text("Dashboard",
                     style: TextStyle(
                         fontSize: 22, fontWeight: FontWeight.bold)),
-                CircleAvatar(child: Icon(Icons.person)),
+                GestureDetector(
+                  onTap: () {
+                    final c = Get.find<DashboardController>();
+                    c.changeTab(3);
+                  },
+                  child: CircleAvatar(
+                    child: Icon(Icons.person),
+                  ),
+                ),
               ],
             ),
 
             SizedBox(height: 20),
 
-            // 🔥 STATUS HARI INI (REACTIVE)
+            // 🔥 STATUS HARI INI
             Obx(() {
               final status = controller.getTodayStatus();
 
@@ -108,25 +120,67 @@ class _HomeContentState extends State<HomeContent> {
 
             SizedBox(height: 20),
 
-            // 🔹 MENU TITLE
             Text("Menu",
                 style:
                     TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
 
             SizedBox(height: 20),
 
-            // 🔥 ABSEN CARD + ANIMASI
+            // 🔥 ABSEN BUTTON (UPDATED)
             GestureDetector(
-              onTapDown: (_) {
-                setState(() => scale = 0.97);
-              },
+              onTapDown: (_) => setState(() => scale = 0.97),
               onTapUp: (_) {
                 setState(() => scale = 1.0);
-                Get.to(() => AbsensiPage());
+
+                showModalBottomSheet(
+                  context: context,
+                  shape: RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(20)),
+                  ),
+                  builder: (context) {
+                    return Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+
+                          Text("Pilih Absensi",
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold)),
+
+                          SizedBox(height: 20),
+
+                          actionButton(
+                              "Hadir",
+                              Icons.check_circle,
+                              Colors.green, () {
+                            Get.back();
+                            Get.to(() => AbsensiPage());
+                          }),
+
+                          actionButton(
+                              "Izin",
+                              Icons.assignment,
+                              Colors.orange, () {
+                            Get.back();
+                            Get.to(() => IzinPage());
+                          }),
+
+                          actionButton(
+                              "Sakit",
+                              Icons.local_hospital,
+                              Colors.red, () {
+                            Get.back();
+                            Get.to(() => SakitPage());
+                          }),
+                        ],
+                      ),
+                    );
+                  },
+                );
               },
-              onTapCancel: () {
-                setState(() => scale = 1.0);
-              },
+              onTapCancel: () => setState(() => scale = 1.0),
               child: AnimatedScale(
                 scale: scale,
                 duration: Duration(milliseconds: 150),
@@ -142,9 +196,7 @@ class _HomeContentState extends State<HomeContent> {
                         child: Icon(Icons.fingerprint,
                             size: 30, color: Colors.blue),
                       ),
-
                       SizedBox(width: 15),
-
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -161,7 +213,6 @@ class _HomeContentState extends State<HomeContent> {
                           ],
                         ),
                       ),
-
                       Icon(Icons.arrow_forward_ios, size: 16)
                     ],
                   ),
@@ -171,60 +222,112 @@ class _HomeContentState extends State<HomeContent> {
 
             SizedBox(height: 25),
 
-            // 🔹 BANNER TITLE
             Text("Informasi",
                 style:
                     TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
 
             SizedBox(height: 10),
 
-            // 🔹 SLIDER
             CarouselSlider(
               options: CarouselOptions(
-                height: 160,
+                height: 170,
                 autoPlay: true,
-                viewportFraction: 1,
+                enlargeCenterPage: true,
+                viewportFraction: 0.85,
+                onPageChanged: (index, reason) {
+                  setState(() {
+                    currentBanner = index;
+                  });
+                },
               ),
               items: banners.map((item) {
-                return Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: Image.network(
-                        item["image"]!,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-
-                    Container(
-                      decoration: BoxDecoration(
+                return Container(
+                  margin: EdgeInsets.symmetric(horizontal: 5),
+                  child: Stack(
+                    children: [
+                      ClipRRect(
                         borderRadius: BorderRadius.circular(20),
-                        color: Colors.black.withOpacity(0.4),
+                        child: Image.network(
+                          item["image"]!,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
                       ),
-                    ),
-
-                    Positioned(
-                      bottom: 15,
-                      left: 15,
-                      right: 15,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(item["title"]!,
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16)),
-                          Text(item["desc"]!,
-                              style: TextStyle(color: Colors.white70)),
-                        ],
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: Colors.black.withOpacity(0.4),
+                        ),
                       ),
-                    )
-                  ],
+                      Positioned(
+                        bottom: 15,
+                        left: 15,
+                        right: 15,
+                        child: Column(
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
+                          children: [
+                            Text(item["title"]!,
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight:
+                                        FontWeight.bold)),
+                            Text(item["desc"]!,
+                                style:
+                                    TextStyle(color: Colors.white70)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               }).toList(),
             ),
+
+            SizedBox(height: 10),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                banners.length,
+                (index) => AnimatedContainer(
+                  duration: Duration(milliseconds: 300),
+                  margin: EdgeInsets.symmetric(horizontal: 4),
+                  width: currentBanner == index ? 12 : 8,
+                  height: currentBanner == index ? 12 : 8,
+                  decoration: BoxDecoration(
+                    color: currentBanner == index
+                        ? Colors.blue
+                        : Colors.grey[300],
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 🔥 BUTTON HELPER
+  Widget actionButton(
+      String title, IconData icon, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: EdgeInsets.only(bottom: 10),
+        padding: EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: color),
+            SizedBox(width: 10),
+            Text(title,
+                style: TextStyle(fontWeight: FontWeight.bold))
           ],
         ),
       ),
