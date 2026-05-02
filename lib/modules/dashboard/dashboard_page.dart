@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../history/history_page.dart';
 import 'home_content.dart';
 import 'profile_page.dart';
+import 'schedule_page.dart';
 
 class DashboardPage extends StatefulWidget {
   @override
@@ -13,6 +14,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   final pages = [
     HomeContent(),
+    SchedulePage(),
     HistoryPage(),
     ProfilePage(),
   ];
@@ -26,6 +28,7 @@ class _DashboardPageState extends State<DashboardPage> {
         onDestinationSelected: (i) => setState(() => index = i),
         destinations: [
           NavigationDestination(icon: Icon(Icons.home), label: "Home"),
+          NavigationDestination(icon: Icon(Icons.schedule), label: "Jadwal"),
           NavigationDestination(icon: Icon(Icons.history), label: "Riwayat"),
           NavigationDestination(icon: Icon(Icons.person), label: "Profile"),
         ],

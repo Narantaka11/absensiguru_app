@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import '../../../core/widgets/app_card.dart';
 import '../absensi/absensi_page.dart';
+import '../auth/attendance_controller.dart';
 
 class HomeContent extends StatefulWidget {
   const HomeContent({super.key});
@@ -13,6 +14,8 @@ class HomeContent extends StatefulWidget {
 
 class _HomeContentState extends State<HomeContent> {
   double scale = 1.0;
+
+  final controller = Get.find<AttendanceController>();
 
   @override
   Widget build(BuildContext context) {
@@ -54,25 +57,54 @@ class _HomeContentState extends State<HomeContent> {
 
             SizedBox(height: 20),
 
-            // 🔹 STATUS HARI INI
-            AppCard(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("Status Hari Ini"),
-                      SizedBox(height: 5),
-                      Text("Belum Absen",
+            // 🔥 STATUS HARI INI (REACTIVE)
+            Obx(() {
+              final status = controller.getTodayStatus();
+
+              String text;
+              Color color;
+              IconData icon;
+
+              switch (status) {
+                case "hadir":
+                  text = "Sudah Absen";
+                  color = Colors.green;
+                  icon = Icons.check_circle;
+                  break;
+                case "telat":
+                  text = "Terlambat";
+                  color = Colors.orange;
+                  icon = Icons.warning;
+                  break;
+                default:
+                  text = "Belum Absen";
+                  color = Colors.red;
+                  icon = Icons.close;
+              }
+
+              return AppCard(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Status Hari Ini"),
+                        SizedBox(height: 5),
+                        Text(
+                          text,
                           style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                  Icon(Icons.warning, color: Colors.orange)
-                ],
-              ),
-            ),
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: color),
+                        ),
+                      ],
+                    ),
+                    Icon(icon, color: color)
+                  ],
+                ),
+              );
+            }),
 
             SizedBox(height: 20),
 

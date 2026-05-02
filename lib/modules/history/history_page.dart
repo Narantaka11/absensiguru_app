@@ -15,18 +15,26 @@ class _HistoryPageState extends State<HistoryPage> {
   DateTime selectedDay = DateTime.now();
   String selectedTab = "absen";
 
-  final controller = Get.put(AttendanceController());
+  final controller = Get.find<AttendanceController>();
 
+  // 🔥 FIX: HARUS PER HARI (BUKAN BULAN)
   List<String> getEventsForDay(DateTime day) {
-    final data = controller.attendanceData;
+    return controller.getByDate(day).map((e) => e.status).toList();
+  }
 
-    return data.entries
-        .where((entry) =>
-            entry.key.year == day.year &&
-            entry.key.month == day.month &&
-            entry.key.day == day.day)
-        .map((e) => e.value)
-        .toList();
+  // 🔥 LIST TETAP PER BULAN
+  List<AttendanceModel> getFilteredData() {
+    final data = controller.getByMonth(selectedDay);
+
+    if (selectedTab == "absen") {
+      return data;
+    } else if (selectedTab == "telat") {
+      return data.where((e) => e.status == "telat").toList();
+    } else if (selectedTab == "izin") {
+      return data.where((e) => e.status == "izin").toList();
+    }
+
+    return data;
   }
 
   @override
@@ -43,8 +51,8 @@ class _HistoryPageState extends State<HistoryPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text("Riwayat",
-                      style:
-                          TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                      style: TextStyle(
+                          fontSize: 22, fontWeight: FontWeight.bold)),
                   CircleAvatar(child: Icon(Icons.person)),
                 ],
               ),
@@ -78,15 +86,17 @@ class _HistoryPageState extends State<HistoryPage> {
 
                               calendarBuilders: CalendarBuilders(
 
-                                // 🔥 BACKGROUND WARNA
+                                // 🔥 BACKGROUND
                                 defaultBuilder:
                                     (context, day, focusedDay) {
                                   final events = getEventsForDay(day);
                                   if (events.isEmpty) return null;
 
+                                  final status = events.last;
+
                                   Color bgColor;
 
-                                  switch (events.first) {
+                                  switch (status) {
                                     case "hadir":
                                       bgColor =
                                           Colors.green.withOpacity(0.3);
@@ -111,11 +121,10 @@ class _HistoryPageState extends State<HistoryPage> {
                                           BorderRadius.circular(8),
                                     ),
                                     child: Center(
-                                      child: Text(
-                                        '${day.day}',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold),
-                                      ),
+                                      child: Text('${day.day}',
+                                          style: TextStyle(
+                                              fontWeight:
+                                                  FontWeight.bold)),
                                     ),
                                   );
                                 },
@@ -131,22 +140,23 @@ class _HistoryPageState extends State<HistoryPage> {
                                           BorderRadius.circular(8),
                                     ),
                                     child: Center(
-                                      child: Text(
-                                        '${day.day}',
-                                        style:
-                                            TextStyle(color: Colors.white),
-                                      ),
+                                      child: Text('${day.day}',
+                                          style:
+                                              TextStyle(color: Colors.white)),
                                     ),
                                   );
                                 },
 
                                 // 🔥 DOT
-                                markerBuilder: (context, day, events) {
+                                markerBuilder:
+                                    (context, day, events) {
                                   if (events.isEmpty) return SizedBox();
+
+                                  final status = events.last;
 
                                   Color color;
 
-                                  switch (events.first) {
+                                  switch (status) {
                                     case "hadir":
                                       color = Colors.green;
                                       break;
@@ -213,13 +223,70 @@ class _HistoryPageState extends State<HistoryPage> {
 
                       SizedBox(height: 20),
 
-                      // 🔹 LIST
-                      if (selectedTab == "absen")
-                        historyItem("Masuk", "07:30"),
-                      if (selectedTab == "telat")
-                        historyItem("Terlambat", "08:15"),
-                      if (selectedTab == "izin")
-                        historyItem("Sakit", "Surat dokter"),
+                      // 🔥 LIST BULANAN
+                      Builder(
+                        builder: (_) {
+                          final data = getFilteredData();
+
+                          if (data.isEmpty) {
+                            return Padding(
+                              padding: EdgeInsets.all(20),
+                              child:
+                                  Text("Belum ada data bulan ini"),
+                            );
+                          }
+
+                          return ListView.builder(
+                            shrinkWrap: true,
+                            physics:
+                                NeverScrollableScrollPhysics(),
+                            itemCount: data.length,
+                            itemBuilder: (context, index) {
+                              final item = data[index];
+
+                              String tanggal =
+                                  "${item.dateTime.day}/${item.dateTime.month}";
+                              String jam =
+                                  "${item.dateTime.hour.toString().padLeft(2, '0')}:${item.dateTime.minute.toString().padLeft(2, '0')}";
+
+                              Color color;
+                              IconData icon;
+
+                              switch (item.status) {
+                                case "hadir":
+                                  color = Colors.green;
+                                  icon = Icons.check_circle;
+                                  break;
+                                case "telat":
+                                  color = Colors.orange;
+                                  icon = Icons.warning;
+                                  break;
+                                case "izin":
+                                  color = Colors.blue;
+                                  icon = Icons.info;
+                                  break;
+                                default:
+                                  color = Colors.red;
+                                  icon = Icons.close;
+                              }
+
+                              return AppCard(
+                                child: ListTile(
+                                  leading: Icon(icon, color: color),
+                                  title: Text("$tanggal • $jam"),
+                                  trailing: Text(
+                                    item.status.toUpperCase(),
+                                    style: TextStyle(
+                                        color: color,
+                                        fontWeight:
+                                            FontWeight.bold),
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -239,7 +306,8 @@ class _HistoryPageState extends State<HistoryPage> {
         setState(() => selectedTab = key);
       },
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding:
+            EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: isActive ? Colors.blue : Colors.grey[200],
           borderRadius: BorderRadius.circular(20),
@@ -247,16 +315,6 @@ class _HistoryPageState extends State<HistoryPage> {
         child: Text(title,
             style: TextStyle(
                 color: isActive ? Colors.white : Colors.black)),
-      ),
-    );
-  }
-
-  Widget historyItem(String title, String subtitle) {
-    return AppCard(
-      child: ListTile(
-        leading: Icon(Icons.access_time),
-        title: Text(title),
-        subtitle: Text(subtitle),
       ),
     );
   }
