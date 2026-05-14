@@ -1,7 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+
 import '../../../core/widgets/app_card.dart';
+import '../../data/services/presence_repository.dart';
 import '../auth/attendance_controller.dart';
+import '../auth/dashboard_controller.dart';
 
 class SakitPage extends StatefulWidget {
   const SakitPage({super.key});
@@ -13,82 +19,136 @@ class SakitPage extends StatefulWidget {
 class _SakitPageState extends State<SakitPage> {
   final controller = Get.find<AttendanceController>();
 
+  final dashboardController = Get.find<DashboardController>();
+
+  final PresenceRepository repository = PresenceRepository();
+
   final TextEditingController alasanController = TextEditingController();
 
-  String? fakeImage;
+  File? imageFile;
 
   double scaleSubmit = 1.0;
   double scalePhoto = 1.0;
 
-  void getFakePhoto() {
-    setState(() {
-      fakeImage = "https://picsum.photos/400";
-    });
+  bool isLoading = false;
+
+  // 🔥 PICK IMAGE
+  Future<void> pickImage() async {
+    final picked = await ImagePicker().pickImage(
+      source: ImageSource.camera,
+      imageQuality: 70,
+    );
+
+    if (picked != null) {
+      setState(() {
+        imageFile = File(picked.path);
+      });
+    }
   }
 
-  void submitSakit() {
+  // 🔥 SUBMIT SAKIT
+  Future<void> submitSakit() async {
     if (alasanController.text.isEmpty) {
       Get.snackbar("Error", "Isi keterangan sakit");
+
       return;
     }
 
-    controller.markAttendance(
-      controller.getCurrentDate(),
-      "sakit",
-    );
+    try {
+      setState(() {
+        isLoading = true;
+      });
 
-    Get.snackbar(
-      "",
-      "",
-      snackPosition: SnackPosition.TOP,
-      backgroundColor: Colors.transparent,
-      margin: EdgeInsets.all(16),
-      duration: Duration(seconds: 2),
-      titleText: Container(
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: Offset(0, 4),
-            )
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
-                shape: BoxShape.circle,
+      // 🔥 HIT API LARAVEL
+      await repository.sakit(
+        notes: alasanController.text,
+        attachmentPath: imageFile?.path,
+      );
+
+      // 🔥 UPDATE DASHBOARD REALTIME
+      await dashboardController.loadTodayPresence();
+
+      // 🔥 UPDATE LOCAL STATE
+      controller.markAttendance(controller.getCurrentDate(), "sakit");
+
+      Get.snackbar(
+        "",
+        "",
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.transparent,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+
+        titleText: Container(
+          padding: const EdgeInsets.all(16),
+
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-              child: Icon(Icons.local_hospital, color: Colors.red),
-            ),
-            SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Data Terkirim",
+            ],
+          ),
+
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+
+                child: const Icon(Icons.local_hospital, color: Colors.red),
+              ),
+
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+
+                  children: [
+                    const Text(
+                      "Data Terkirim",
+
                       style: TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 14)),
-                  SizedBox(height: 4),
-                  Text("Laporan sakit berhasil dikirim",
-                      style: TextStyle(color: Colors.grey[600])),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
 
-    Future.delayed(Duration(milliseconds: 2000), () {
-      Get.back();
-    });
+                    const SizedBox(height: 4),
+
+                    Text(
+                      "Laporan sakit berhasil dikirim",
+
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      Future.delayed(const Duration(seconds: 2), () {
+        Navigator.pop(context);
+      });
+    } catch (e) {
+      Get.snackbar('Error', e.toString());
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   @override
@@ -96,44 +156,53 @@ class _SakitPageState extends State<SakitPage> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.all(20),
+          padding: const EdgeInsets.all(20),
+
           child: Column(
             children: [
-
-              // 🔹 HEADER
+              // 🔥 HEADER
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
                 children: [
-                  Text("Sakit",
-                      style:
-                          TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                  const Text(
+                    "Sakit",
+
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+
                   IconButton(
                     onPressed: () => Get.back(),
-                    icon: Icon(Icons.close),
-                  )
+                    icon: const Icon(Icons.close),
+                  ),
                 ],
               ),
 
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
 
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-
                       // 🔥 FORM KETERANGAN
                       AppCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
+
                           children: [
-                            Text("Keterangan Sakit",
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold)),
-                            SizedBox(height: 10),
+                            const Text(
+                              "Keterangan Sakit",
+
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+
+                            const SizedBox(height: 10),
+
                             TextField(
                               controller: alasanController,
                               maxLines: 4,
-                              decoration: InputDecoration(
+
+                              decoration: const InputDecoration(
                                 hintText: "Masukkan keterangan sakit...",
                                 border: InputBorder.none,
                               ),
@@ -142,64 +211,95 @@ class _SakitPageState extends State<SakitPage> {
                         ),
                       ),
 
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
-                      // 🔥 FOTO (BUKTI)
+                      // 🔥 FOTO BUKTI
                       AppCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
+
                           children: [
-                            Text("Upload Bukti (Opsional)",
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold)),
-                            SizedBox(height: 10),
+                            const Text(
+                              "Upload Bukti (Opsional)",
+
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+
+                            const SizedBox(height: 10),
 
                             Container(
-                              height: 150,
+                              height: 180,
                               width: double.infinity,
+
                               decoration: BoxDecoration(
                                 color: Colors.grey[200],
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: fakeImage == null
-                                  ? Center(child: Text("Belum ada foto"))
+
+                              child: imageFile == null
+                                  ? const Center(child: Text("Belum ada foto"))
                                   : ClipRRect(
-                                      borderRadius:
-                                          BorderRadius.circular(12),
-                                      child: Image.network(
-                                        fakeImage!,
+                                      borderRadius: BorderRadius.circular(12),
+
+                                      child: Image.file(
+                                        imageFile!,
                                         fit: BoxFit.cover,
                                       ),
                                     ),
                             ),
 
-                            SizedBox(height: 15),
+                            const SizedBox(height: 15),
 
-                            // 🔥 BUTTON FOTO (STYLE SAMA)
+                            // 🔥 BUTTON FOTO
                             GestureDetector(
-                              onTapDown: (_) =>
-                                  setState(() => scalePhoto = 0.97),
-                              onTapUp: (_) {
-                                setState(() => scalePhoto = 1.0);
-                                getFakePhoto();
+                              onTapDown: (_) {
+                                setState(() {
+                                  scalePhoto = 0.97;
+                                });
                               },
-                              onTapCancel: () =>
-                                  setState(() => scalePhoto = 1.0),
+
+                              onTapUp: (_) {
+                                setState(() {
+                                  scalePhoto = 1.0;
+                                });
+
+                                pickImage();
+                              },
+
+                              onTapCancel: () {
+                                setState(() {
+                                  scalePhoto = 1.0;
+                                });
+                              },
+
                               child: AnimatedScale(
                                 scale: scalePhoto,
-                                duration: Duration(milliseconds: 150),
+
+                                duration: const Duration(milliseconds: 150),
+
                                 child: AppCard(
                                   child: Center(
                                     child: Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
+
                                       children: [
-                                        Icon(Icons.camera_alt,
-                                            color: Colors.red),
-                                        SizedBox(width: 10),
-                                        Text("Ambil Foto",
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold)),
+                                        const Icon(
+                                          Icons.camera_alt,
+                                          color: Colors.red,
+                                        ),
+
+                                        const SizedBox(width: 10),
+
+                                        Text(
+                                          imageFile == null
+                                              ? "Ambil Foto"
+                                              : "Foto Terupload",
+
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -210,39 +310,62 @@ class _SakitPageState extends State<SakitPage> {
                         ),
                       ),
 
-                      SizedBox(height: 30),
+                      const SizedBox(height: 30),
 
                       // 🔥 SUBMIT
                       GestureDetector(
                         onTapDown: (_) {
-                          setState(() => scaleSubmit = 0.97);
+                          setState(() {
+                            scaleSubmit = 0.97;
+                          });
                         },
+
                         onTapUp: (_) {
-                          setState(() => scaleSubmit = 1.0);
-                          submitSakit();
+                          setState(() {
+                            scaleSubmit = 1.0;
+                          });
+
+                          if (!isLoading) {
+                            submitSakit();
+                          }
                         },
+
                         onTapCancel: () {
-                          setState(() => scaleSubmit = 1.0);
+                          setState(() {
+                            scaleSubmit = 1.0;
+                          });
                         },
+
                         child: AnimatedScale(
                           scale: scaleSubmit,
-                          duration: Duration(milliseconds: 150),
+
+                          duration: const Duration(milliseconds: 150),
+
                           child: AppCard(
                             child: Center(
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.local_hospital,
-                                      color: Colors.red),
-                                  SizedBox(width: 10),
-                                  Text(
-                                    "Kirim Laporan Sakit",
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold),
-                                  )
-                                ],
-                              ),
+                              child: isLoading
+                                  ? const CircularProgressIndicator()
+                                  : Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+
+                                      children: [
+                                        const Icon(
+                                          Icons.local_hospital,
+                                          color: Colors.red,
+                                        ),
+
+                                        const SizedBox(width: 10),
+
+                                        const Text(
+                                          "Kirim Laporan Sakit",
+
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                             ),
                           ),
                         ),

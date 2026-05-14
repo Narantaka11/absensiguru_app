@@ -4,22 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
+import '../auth/dashboard_controller.dart';
 
 import '../../../core/widgets/app_card.dart';
 import '../auth/attendance_controller.dart';
-import '../auth/dashboard_controller.dart';
 
-class AbsensiPage extends StatefulWidget {
-  const AbsensiPage({super.key});
+class CheckOutPage extends StatefulWidget {
+  const CheckOutPage({super.key});
 
   @override
-  State<AbsensiPage> createState() => _AbsensiPageState();
+  State<CheckOutPage> createState() => _CheckOutPageState();
 }
 
-class _AbsensiPageState extends State<AbsensiPage> {
+class _CheckOutPageState extends State<CheckOutPage> {
   final controller = Get.find<AttendanceController>();
-
-  final dashboardController = Get.find<DashboardController>();
 
   String? fakeLocation;
   String? fakeImage;
@@ -34,7 +32,7 @@ class _AbsensiPageState extends State<AbsensiPage> {
   double scalePhoto = 1.0;
 
   // 🔥 REAL GPS
-  Future<void> getFakeLocation() async {
+  Future<void> getLocation() async {
     bool serviceEnabled;
     LocationPermission permission;
 
@@ -70,8 +68,8 @@ class _AbsensiPageState extends State<AbsensiPage> {
     });
   }
 
-  // 🔥 REAL CAMERA
-  Future<void> getFakePhoto() async {
+  // 🔥 CAMERA
+  Future<void> getPhoto() async {
     final picker = ImagePicker();
 
     final pickedFile = await picker.pickImage(
@@ -88,8 +86,8 @@ class _AbsensiPageState extends State<AbsensiPage> {
     }
   }
 
-  // 🔥 SUBMIT ABSENSI REALTIME
-  void submitAbsensi() async {
+  // 🔥 SUBMIT CHECKOUT
+  void submitCheckOut() async {
     if (latitude == null || longitude == null) {
       Get.snackbar("Error", "Ambil lokasi dulu");
 
@@ -102,36 +100,49 @@ class _AbsensiPageState extends State<AbsensiPage> {
       return;
     }
 
-    final success = await controller.checkIn(
+    final success = await controller.checkOut(
       latitude: latitude!,
       longitude: longitude!,
       photoPath: selectedImagePath!,
     );
 
     if (success) {
-      // 🔥 REFRESH DASHBOARD
-      await dashboardController.loadTodayPresence();
+      final dashboardController = Get.find<DashboardController>();
+
+      dashboardController.isCheckedOut = true;
+
+      dashboardController.attendanceStatus = "Sudah Pulang";
+
+      dashboardController.update();
 
       Get.snackbar(
         "",
+
         "",
+
         snackPosition: SnackPosition.TOP,
+
         backgroundColor: Colors.transparent,
-        margin: EdgeInsets.all(16),
-        duration: Duration(seconds: 2),
+
+        margin: const EdgeInsets.all(16),
+
+        duration: const Duration(seconds: 2),
 
         titleText: Container(
-          padding: EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
 
           decoration: BoxDecoration(
             color: Colors.white,
+
             borderRadius: BorderRadius.circular(16),
 
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.1),
+
                 blurRadius: 10,
-                offset: Offset(0, 4),
+
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -139,36 +150,38 @@ class _AbsensiPageState extends State<AbsensiPage> {
           child: Row(
             children: [
               Container(
-                padding: EdgeInsets.all(10),
+                padding: const EdgeInsets.all(10),
 
                 decoration: BoxDecoration(
                   color: Colors.green.withOpacity(0.1),
+
                   shape: BoxShape.circle,
                 ),
 
-                child: Icon(Icons.check, color: Colors.green),
+                child: const Icon(Icons.check, color: Colors.green),
               ),
 
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
 
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
 
                   children: [
-                    Text(
+                    const Text(
                       "Berhasil",
 
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
+
                         fontSize: 14,
                       ),
                     ),
 
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
 
                     Text(
-                      "Absensi berhasil dicatat",
+                      "Check-out berhasil dicatat",
 
                       style: TextStyle(color: Colors.grey[600]),
                     ),
@@ -186,7 +199,8 @@ class _AbsensiPageState extends State<AbsensiPage> {
     } else {
       Get.snackbar(
         "Error",
-        controller.errorMessage.value ?? "Gagal melakukan absensi",
+
+        controller.errorMessage.value ?? "Gagal check-out",
 
         backgroundColor: Colors.red,
 
@@ -200,17 +214,17 @@ class _AbsensiPageState extends State<AbsensiPage> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.all(20),
+          padding: const EdgeInsets.all(20),
 
           child: Column(
             children: [
-              // 🔹 HEADER
+              // 🔥 HEADER
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
 
                 children: [
-                  Text(
-                    "Absensi",
+                  const Text(
+                    "Check-Out",
 
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
@@ -218,12 +232,12 @@ class _AbsensiPageState extends State<AbsensiPage> {
                   IconButton(
                     onPressed: () => Get.back(),
 
-                    icon: Icon(Icons.close),
+                    icon: const Icon(Icons.close),
                   ),
                 ],
               ),
 
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
 
               Expanded(
                 child: SingleChildScrollView(
@@ -235,16 +249,17 @@ class _AbsensiPageState extends State<AbsensiPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
 
                           children: [
-                            Text(
+                            const Text(
                               "Lokasi",
 
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
 
-                            SizedBox(height: 10),
+                            const SizedBox(height: 10),
 
                             Container(
                               height: 100,
+
                               width: double.infinity,
 
                               decoration: BoxDecoration(
@@ -255,12 +270,12 @@ class _AbsensiPageState extends State<AbsensiPage> {
 
                               child: Center(
                                 child: fakeLocation == null
-                                    ? Text("Belum ada lokasi")
+                                    ? const Text("Belum ada lokasi")
                                     : Text(fakeLocation!),
                               ),
                             ),
 
-                            SizedBox(height: 15),
+                            const SizedBox(height: 15),
 
                             GestureDetector(
                               onTapDown: (_) =>
@@ -269,7 +284,7 @@ class _AbsensiPageState extends State<AbsensiPage> {
                               onTapUp: (_) async {
                                 setState(() => scaleLocation = 1.0);
 
-                                await getFakeLocation();
+                                await getLocation();
                               },
 
                               onTapCancel: () =>
@@ -278,7 +293,7 @@ class _AbsensiPageState extends State<AbsensiPage> {
                               child: AnimatedScale(
                                 scale: scaleLocation,
 
-                                duration: Duration(milliseconds: 150),
+                                duration: const Duration(milliseconds: 150),
 
                                 child: AppCard(
                                   child: Center(
@@ -287,15 +302,15 @@ class _AbsensiPageState extends State<AbsensiPage> {
                                           MainAxisAlignment.center,
 
                                       children: [
-                                        Icon(
+                                        const Icon(
                                           Icons.location_on,
 
                                           color: Colors.blue,
                                         ),
 
-                                        SizedBox(width: 10),
+                                        const SizedBox(width: 10),
 
-                                        Text(
+                                        const Text(
                                           "Ambil Lokasi",
 
                                           style: TextStyle(
@@ -312,7 +327,7 @@ class _AbsensiPageState extends State<AbsensiPage> {
                         ),
                       ),
 
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
                       // 🔥 FOTO
                       AppCard(
@@ -320,16 +335,17 @@ class _AbsensiPageState extends State<AbsensiPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
 
                           children: [
-                            Text(
+                            const Text(
                               "Foto Selfie",
 
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
 
-                            SizedBox(height: 10),
+                            const SizedBox(height: 10),
 
                             Container(
                               height: 150,
+
                               width: double.infinity,
 
                               decoration: BoxDecoration(
@@ -339,7 +355,7 @@ class _AbsensiPageState extends State<AbsensiPage> {
                               ),
 
                               child: fakeImage == null
-                                  ? Center(child: Text("Belum ada foto"))
+                                  ? const Center(child: Text("Belum ada foto"))
                                   : ClipRRect(
                                       borderRadius: BorderRadius.circular(12),
 
@@ -351,7 +367,7 @@ class _AbsensiPageState extends State<AbsensiPage> {
                                     ),
                             ),
 
-                            SizedBox(height: 15),
+                            const SizedBox(height: 15),
 
                             GestureDetector(
                               onTapDown: (_) =>
@@ -360,7 +376,7 @@ class _AbsensiPageState extends State<AbsensiPage> {
                               onTapUp: (_) async {
                                 setState(() => scalePhoto = 1.0);
 
-                                await getFakePhoto();
+                                await getPhoto();
                               },
 
                               onTapCancel: () =>
@@ -369,7 +385,7 @@ class _AbsensiPageState extends State<AbsensiPage> {
                               child: AnimatedScale(
                                 scale: scalePhoto,
 
-                                duration: Duration(milliseconds: 150),
+                                duration: const Duration(milliseconds: 150),
 
                                 child: AppCard(
                                   child: Center(
@@ -378,15 +394,15 @@ class _AbsensiPageState extends State<AbsensiPage> {
                                           MainAxisAlignment.center,
 
                                       children: [
-                                        Icon(
+                                        const Icon(
                                           Icons.camera_alt,
 
                                           color: Colors.blue,
                                         ),
 
-                                        SizedBox(width: 10),
+                                        const SizedBox(width: 10),
 
-                                        Text(
+                                        const Text(
                                           "Ambil Foto",
 
                                           style: TextStyle(
@@ -403,7 +419,7 @@ class _AbsensiPageState extends State<AbsensiPage> {
                         ),
                       ),
 
-                      SizedBox(height: 30),
+                      const SizedBox(height: 30),
 
                       // 🔥 SUBMIT
                       Obx(
@@ -416,7 +432,7 @@ class _AbsensiPageState extends State<AbsensiPage> {
                             setState(() => scaleSubmit = 1.0);
 
                             if (!controller.isLoading.value) {
-                              submitAbsensi();
+                              submitCheckOut();
                             }
                           },
 
@@ -427,7 +443,7 @@ class _AbsensiPageState extends State<AbsensiPage> {
                           child: AnimatedScale(
                             scale: scaleSubmit,
 
-                            duration: Duration(milliseconds: 150),
+                            duration: const Duration(milliseconds: 150),
 
                             child: AppCard(
                               child: Center(
@@ -436,34 +452,28 @@ class _AbsensiPageState extends State<AbsensiPage> {
 
                                   children: [
                                     if (controller.isLoading.value)
-                                      SizedBox(
+                                      const SizedBox(
                                         width: 20,
                                         height: 20,
 
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2,
-
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                Colors.blue,
-                                              ),
                                         ),
                                       )
                                     else
-                                      Icon(
-                                        Icons.fingerprint,
-
+                                      const Icon(
+                                        Icons.logout,
                                         color: Colors.blue,
                                       ),
 
-                                    SizedBox(width: 10),
+                                    const SizedBox(width: 10),
 
                                     Text(
                                       controller.isLoading.value
                                           ? "Memproses..."
-                                          : "Submit Absensi",
+                                          : "Submit Check-Out",
 
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),

@@ -16,15 +16,15 @@ class _WelcomePageState extends State<WelcomePage> {
   final List<Map<String, String>> pages = [
     {
       "title": "Absensi Mudah",
-      "desc": "Lakukan absensi hanya dalam satu langkah cepat"
+      "desc": "Lakukan absensi hanya dalam satu langkah cepat",
     },
     {
       "title": "Validasi Lokasi & Foto",
-      "desc": "Pastikan kehadiran sesuai lokasi sekolah"
+      "desc": "Pastikan kehadiran sesuai lokasi sekolah",
     },
     {
       "title": "Riwayat & Laporan",
-      "desc": "Pantau kehadiran dan keterlambatan dengan mudah"
+      "desc": "Pantau kehadiran dan keterlambatan dengan mudah",
     },
   ];
 
@@ -38,7 +38,6 @@ class _WelcomePageState extends State<WelcomePage> {
           padding: EdgeInsets.all(20),
           child: Column(
             children: [
-
               // 🔹 SLIDER
               Expanded(
                 child: PageView.builder(
@@ -53,7 +52,6 @@ class _WelcomePageState extends State<WelcomePage> {
                     return Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-
                         // 🔥 ICON
                         Container(
                           padding: EdgeInsets.all(30),
@@ -61,8 +59,11 @@ class _WelcomePageState extends State<WelcomePage> {
                             color: Colors.blue.withOpacity(0.1),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(Icons.mobile_friendly,
-                              size: 60, color: Colors.blue),
+                          child: Icon(
+                            Icons.mobile_friendly,
+                            size: 60,
+                            color: Colors.blue,
+                          ),
                         ),
 
                         SizedBox(height: 30),
@@ -71,8 +72,9 @@ class _WelcomePageState extends State<WelcomePage> {
                         Text(
                           item["title"]!,
                           style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold),
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                           textAlign: TextAlign.center,
                         ),
 
@@ -134,8 +136,9 @@ class _WelcomePageState extends State<WelcomePage> {
                         child: Text(
                           "Get Started",
                           style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold),
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),

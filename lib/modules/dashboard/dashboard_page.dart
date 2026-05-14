@@ -28,40 +28,41 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       // 🔥 WAJIB Obx biar reactive
-      body: Obx(() => IndexedStack(
-            index: controller.index.value,
-            children: pages,
-          )),
+      body: Obx(
+        () => IndexedStack(index: controller.index.value, children: pages),
+      ),
 
       // 🔥 NAVBAR FIX
-      bottomNavigationBar: Obx(() => NavigationBar(
-            selectedIndex: controller.index.value,
-            onDestinationSelected: (i) {
-              controller.changeTab(i);
-            },
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home),
-                label: "Home",
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.schedule_outlined),
-                selectedIcon: Icon(Icons.schedule),
-                label: "Jadwal",
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.history_outlined),
-                selectedIcon: Icon(Icons.history),
-                label: "Riwayat",
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.person_outline),
-                selectedIcon: Icon(Icons.person),
-                label: "Profile",
-              ),
-            ],
-          )),
+      bottomNavigationBar: Obx(
+        () => NavigationBar(
+          selectedIndex: controller.index.value,
+          onDestinationSelected: (i) {
+            controller.changeTab(i);
+          },
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home),
+              label: "Home",
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.schedule_outlined),
+              selectedIcon: Icon(Icons.schedule),
+              label: "Jadwal",
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.history_outlined),
+              selectedIcon: Icon(Icons.history),
+              label: "Riwayat",
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.person_outline),
+              selectedIcon: Icon(Icons.person),
+              label: "Profile",
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

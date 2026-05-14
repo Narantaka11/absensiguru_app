@@ -14,15 +14,14 @@ class ProfilePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             // 🔹 HEADER
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Profile",
-                    style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold)),
+                Text(
+                  "Profile",
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
                 Icon(Icons.settings),
               ],
             ),
@@ -33,25 +32,21 @@ class ProfilePage extends StatelessWidget {
             AppCard(
               child: Row(
                 children: [
-
-                  CircleAvatar(
-                    radius: 30,
-                    child: Icon(Icons.person, size: 30),
-                  ),
+                  CircleAvatar(radius: 30, child: Icon(Icons.person, size: 30)),
 
                   SizedBox(width: 15),
 
                   // 🔥 FIX UTAMA: EXPANDED
                   Expanded(
                     child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           "Budi Santoso",
                           style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                         SizedBox(height: 5),
@@ -62,7 +57,7 @@ class ProfilePage extends StatelessWidget {
                         ),
                       ],
                     ),
-                  )
+                  ),
                 ],
               ),
             ),
@@ -73,12 +68,9 @@ class ProfilePage extends StatelessWidget {
             AppCard(
               child: Column(
                 children: [
-                  profileItem(Icons.email, "Email",
-                      "budi@sekolah.com"),
-                  profileItem(Icons.badge, "Status",
-                      "Guru Tetap"),
-                  profileItem(Icons.school, "NIP",
-                      "1987654321"),
+                  profileItem(Icons.email, "Email", "budi@sekolah.com"),
+                  profileItem(Icons.badge, "Status", "Guru Tetap"),
+                  profileItem(Icons.school, "NIP", "1987654321"),
                 ],
               ),
             ),
@@ -107,7 +99,7 @@ class ProfilePage extends StatelessWidget {
                 "Version 1.0.0",
                 style: TextStyle(color: Colors.grey),
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -126,28 +118,24 @@ class ProfilePage extends StatelessWidget {
           // 🔥 FIX DI SINI JUGA
           Expanded(
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: TextStyle(color: Colors.grey)),
+                Text(title, style: TextStyle(color: Colors.grey)),
                 Text(
                   value,
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold),
+                  style: TextStyle(fontWeight: FontWeight.bold),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
   }
 
   // 🔥 ACTION ITEM (AMAN)
-  Widget actionItem(
-      IconData icon, String title, VoidCallback onTap) {
+  Widget actionItem(IconData icon, String title, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Padding(
@@ -159,7 +147,7 @@ class ProfilePage extends StatelessWidget {
 
             Expanded(child: Text(title)), // 🔥 FIX
 
-            Icon(Icons.arrow_forward_ios, size: 14)
+            Icon(Icons.arrow_forward_ios, size: 14),
           ],
         ),
       ),

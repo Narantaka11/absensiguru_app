@@ -1,17 +1,26 @@
 import 'package:get/get.dart';
+import '../../data/models/responses.dart';
+import '../../data/services/auth_repository.dart';
+import '../../data/services/presence_repository.dart';
 
 class AttendanceModel {
   final DateTime dateTime;
   final String status;
 
-  AttendanceModel({
-    required this.dateTime,
-    required this.status,
-  });
+  AttendanceModel({required this.dateTime, required this.status});
 }
 
 class AttendanceController extends GetxController {
   var attendanceList = <AttendanceModel>[].obs;
+
+  // 🔥 API REPOSITORIES
+  final AuthRepository _authRepository = AuthRepository();
+  final PresenceRepository _presenceRepository = PresenceRepository();
+
+  // 🔥 STATE MANAGEMENT
+  var isLoading = false.obs;
+  var currentUser = Rx<User?>(null);
+  var errorMessage = Rx<String?>(null);
 
   // 🔥 DUMMY DATE (UNTUK TEST)
   DateTime? selectedDummyDate;
@@ -26,20 +35,147 @@ class AttendanceController extends GetxController {
     selectedDummyDate = date;
   }
 
+  // 🔥 LOGIN API
+  Future<bool> login(String email, String password) async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = null;
+
+      final response = await _authRepository.login(email, password);
+
+      if (response.success && response.user != null) {
+        currentUser.value = response.user;
+        return true;
+      } else {
+        errorMessage.value = response.message;
+        return false;
+      }
+    } catch (e) {
+      errorMessage.value = e.toString();
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // 🔥 GET CURRENT USER
+  Future<void> getCurrentUserData() async {
+    try {
+      isLoading.value = true;
+      final user = await _authRepository.getCurrentUser();
+      currentUser.value = user;
+    } catch (e) {
+      errorMessage.value = e.toString();
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // 🔥 LOGOUT
+  Future<void> logout() async {
+    try {
+      isLoading.value = true;
+      await _authRepository.logout();
+      currentUser.value = null;
+      attendanceList.clear();
+    } catch (e) {
+      errorMessage.value = e.toString();
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // 🔥 CHECK-IN
+  Future<bool> checkIn({
+    required double latitude,
+    required double longitude,
+    required String photoPath,
+  }) async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = null;
+
+      final response = await _presenceRepository.checkIn(
+        latitude: latitude,
+        longitude: longitude,
+        photoPath: photoPath,
+      );
+
+      if (response.success && response.data != null) {
+        return true;
+      } else {
+        errorMessage.value = response.message;
+
+        return false;
+      }
+    } catch (e) {
+      errorMessage.value = e.toString();
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // 🔥 CHECK OUT
+  Future<bool> checkOut({
+    required double latitude,
+    required double longitude,
+    required String photoPath,
+  }) async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = null;
+      final response = await _presenceRepository.checkOut(
+        latitude: latitude,
+        longitude: longitude,
+        photoPath: photoPath,
+      );
+      isLoading.value = false;
+      if (response.success == true) {
+        return true;
+      } else {
+        errorMessage.value = response.message ?? 'Check-out gagal';
+        return false;
+      }
+    } catch (e) {
+      isLoading.value = false;
+      errorMessage.value = e.toString();
+      return false;
+    }
+  }
+
+  // 🔥 LOAD PRESENCE HISTORY
+  Future<void> loadPresenceHistory({String? month, String? year}) async {
+    try {
+      isLoading.value = true;
+      final presences = await _presenceRepository.getPresenceHistory(
+        month: month,
+        year: year,
+      );
+
+      attendanceList.clear();
+      for (var presence in presences) {
+        final date = DateTime.parse(presence.date);
+        markAttendance(date, presence.status);
+      }
+    } catch (e) {
+      errorMessage.value = e.toString();
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   // 🔥 TAMBAH / UPDATE ABSENSI (ANTI DOUBLE)
   void markAttendance(DateTime date, String status) {
     // hapus dulu kalau sudah ada di tanggal itu
-    attendanceList.removeWhere((item) =>
-        item.dateTime.year == date.year &&
-        item.dateTime.month == date.month &&
-        item.dateTime.day == date.day);
-
-    attendanceList.add(
-      AttendanceModel(
-        dateTime: date,
-        status: status,
-      ),
+    attendanceList.removeWhere(
+      (item) =>
+          item.dateTime.year == date.year &&
+          item.dateTime.month == date.month &&
+          item.dateTime.day == date.day,
     );
+
+    attendanceList.add(AttendanceModel(dateTime: date, status: status));
 
     attendanceList.refresh();
   }
