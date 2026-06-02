@@ -5,6 +5,9 @@ import 'package:get/get.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+
 import '../../../core/widgets/app_card.dart';
 import '../auth/attendance_controller.dart';
 import '../auth/dashboard_controller.dart';
@@ -117,11 +120,11 @@ class _AbsensiPageState extends State<AbsensiPage> {
         "",
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.transparent,
-        margin: EdgeInsets.all(16),
-        duration: Duration(seconds: 2),
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
 
         titleText: Container(
-          padding: EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
 
           decoration: BoxDecoration(
             color: Colors.white,
@@ -131,7 +134,7 @@ class _AbsensiPageState extends State<AbsensiPage> {
               BoxShadow(
                 color: Colors.black.withOpacity(0.1),
                 blurRadius: 10,
-                offset: Offset(0, 4),
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -139,24 +142,24 @@ class _AbsensiPageState extends State<AbsensiPage> {
           child: Row(
             children: [
               Container(
-                padding: EdgeInsets.all(10),
+                padding: const EdgeInsets.all(10),
 
                 decoration: BoxDecoration(
                   color: Colors.green.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
 
-                child: Icon(Icons.check, color: Colors.green),
+                child: const Icon(Icons.check, color: Colors.green),
               ),
 
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
 
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
 
                   children: [
-                    Text(
+                    const Text(
                       "Berhasil",
 
                       style: TextStyle(
@@ -165,7 +168,7 @@ class _AbsensiPageState extends State<AbsensiPage> {
                       ),
                     ),
 
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
 
                     Text(
                       "Absensi berhasil dicatat",
@@ -189,7 +192,6 @@ class _AbsensiPageState extends State<AbsensiPage> {
         controller.errorMessage.value ?? "Gagal melakukan absensi",
 
         backgroundColor: Colors.red,
-
         colorText: Colors.white,
       );
     }
@@ -200,7 +202,7 @@ class _AbsensiPageState extends State<AbsensiPage> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.all(20),
+          padding: const EdgeInsets.all(20),
 
           child: Column(
             children: [
@@ -209,7 +211,7 @@ class _AbsensiPageState extends State<AbsensiPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
 
                 children: [
-                  Text(
+                  const Text(
                     "Absensi",
 
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
@@ -218,12 +220,12 @@ class _AbsensiPageState extends State<AbsensiPage> {
                   IconButton(
                     onPressed: () => Get.back(),
 
-                    icon: Icon(Icons.close),
+                    icon: const Icon(Icons.close),
                   ),
                 ],
               ),
 
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
 
               Expanded(
                 child: SingleChildScrollView(
@@ -235,32 +237,144 @@ class _AbsensiPageState extends State<AbsensiPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
 
                           children: [
-                            Text(
+                            const Text(
                               "Lokasi",
 
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
 
-                            SizedBox(height: 10),
+                            const SizedBox(height: 10),
 
+                            // 🔥 MAP LOCATION
                             Container(
-                              height: 100,
+                              height: 250,
                               width: double.infinity,
 
                               decoration: BoxDecoration(
-                                color: Colors.grey[200],
-
                                 borderRadius: BorderRadius.circular(12),
                               ),
 
-                              child: Center(
-                                child: fakeLocation == null
-                                    ? Text("Belum ada lokasi")
-                                    : Text(fakeLocation!),
+                              child: latitude == null || longitude == null
+                                  ? Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[200],
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+
+                                      child: const Center(
+                                        child: Text("Belum ada lokasi"),
+                                      ),
+                                    )
+                                  : ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+
+                                      child: FlutterMap(
+                                        options: MapOptions(
+                                          initialCenter: LatLng(
+                                            latitude!,
+                                            longitude!,
+                                          ),
+
+                                          initialZoom: 18,
+                                        ),
+
+                                        children: [
+                                          TileLayer(
+                                            urlTemplate:
+                                                'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                            userAgentPackageName:
+                                                'com.example.absensi_guru',
+                                          ),
+
+                                          // 🔥 Radius sekolah
+                                          CircleLayer(
+                                            circles: [
+                                              CircleMarker(
+                                                point: LatLng(
+                                                  -6.3948453,
+                                                  106.8718339,
+                                                ),
+
+                                                radius: 200,
+
+                                                useRadiusInMeter: true,
+
+                                                color: Colors.blue.withOpacity(
+                                                  0.2,
+                                                ),
+
+                                                borderStrokeWidth: 2,
+
+                                                borderColor: Colors.blue,
+                                              ),
+                                            ],
+                                          ),
+
+                                          // 🔥 Marker user
+                                          MarkerLayer(
+                                            markers: [
+                                              Marker(
+                                                point: LatLng(
+                                                  latitude!,
+                                                  longitude!,
+                                                ),
+
+                                                width: 80,
+                                                height: 80,
+
+                                                child: Column(
+                                                  children: [
+                                                    const Icon(
+                                                      Icons.location_on,
+                                                      color: Colors.red,
+                                                      size: 40,
+                                                    ),
+
+                                                    Container(
+                                                      padding:
+                                                          const EdgeInsets.symmetric(
+                                                            horizontal: 8,
+                                                            vertical: 4,
+                                                          ),
+
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.white,
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              8,
+                                                            ),
+                                                      ),
+
+                                                      child: const Text(
+                                                        "Lokasi Anda",
+
+                                                        style: TextStyle(
+                                                          fontSize: 10,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                            ),
+
+                            const SizedBox(height: 10),
+
+                            Text(
+                              fakeLocation ?? "Lokasi belum tersedia",
+
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[700],
                               ),
                             ),
 
-                            SizedBox(height: 15),
+                            const SizedBox(height: 15),
 
                             GestureDetector(
                               onTapDown: (_) =>
@@ -278,7 +392,7 @@ class _AbsensiPageState extends State<AbsensiPage> {
                               child: AnimatedScale(
                                 scale: scaleLocation,
 
-                                duration: Duration(milliseconds: 150),
+                                duration: const Duration(milliseconds: 150),
 
                                 child: AppCard(
                                   child: Center(
@@ -286,10 +400,9 @@ class _AbsensiPageState extends State<AbsensiPage> {
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
 
-                                      children: [
+                                      children: const [
                                         Icon(
                                           Icons.location_on,
-
                                           color: Colors.blue,
                                         ),
 
@@ -312,7 +425,7 @@ class _AbsensiPageState extends State<AbsensiPage> {
                         ),
                       ),
 
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
                       // 🔥 FOTO
                       AppCard(
@@ -320,18 +433,21 @@ class _AbsensiPageState extends State<AbsensiPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
 
                           children: [
-                            Text(
+                            const Text(
                               "Foto Selfie",
 
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
 
-                            SizedBox(height: 10),
+                            const SizedBox(height: 10),
 
                             Container(
-                              height: 150,
-                              width: double.infinity,
+                              constraints: BoxConstraints(
+                                minHeight: 150,
+                                maxHeight: 400,
+                              ),
 
+                              width: double.infinity,
                               decoration: BoxDecoration(
                                 color: Colors.grey[200],
 
@@ -339,19 +455,19 @@ class _AbsensiPageState extends State<AbsensiPage> {
                               ),
 
                               child: fakeImage == null
-                                  ? Center(child: Text("Belum ada foto"))
+                                  ? const Center(child: Text("Belum ada foto"))
                                   : ClipRRect(
                                       borderRadius: BorderRadius.circular(12),
 
                                       child: Image.file(
                                         File(fakeImage!),
 
-                                        fit: BoxFit.cover,
+                                        fit: BoxFit.contain,
                                       ),
                                     ),
                             ),
 
-                            SizedBox(height: 15),
+                            const SizedBox(height: 15),
 
                             GestureDetector(
                               onTapDown: (_) =>
@@ -369,7 +485,7 @@ class _AbsensiPageState extends State<AbsensiPage> {
                               child: AnimatedScale(
                                 scale: scalePhoto,
 
-                                duration: Duration(milliseconds: 150),
+                                duration: const Duration(milliseconds: 150),
 
                                 child: AppCard(
                                   child: Center(
@@ -377,10 +493,9 @@ class _AbsensiPageState extends State<AbsensiPage> {
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
 
-                                      children: [
+                                      children: const [
                                         Icon(
                                           Icons.camera_alt,
-
                                           color: Colors.blue,
                                         ),
 
@@ -403,7 +518,7 @@ class _AbsensiPageState extends State<AbsensiPage> {
                         ),
                       ),
 
-                      SizedBox(height: 30),
+                      const SizedBox(height: 30),
 
                       // 🔥 SUBMIT
                       Obx(
@@ -427,7 +542,7 @@ class _AbsensiPageState extends State<AbsensiPage> {
                           child: AnimatedScale(
                             scale: scaleSubmit,
 
-                            duration: Duration(milliseconds: 150),
+                            duration: const Duration(milliseconds: 150),
 
                             child: AppCard(
                               child: Center(
@@ -436,7 +551,7 @@ class _AbsensiPageState extends State<AbsensiPage> {
 
                                   children: [
                                     if (controller.isLoading.value)
-                                      SizedBox(
+                                      const SizedBox(
                                         width: 20,
                                         height: 20,
 
@@ -450,20 +565,20 @@ class _AbsensiPageState extends State<AbsensiPage> {
                                         ),
                                       )
                                     else
-                                      Icon(
+                                      const Icon(
                                         Icons.fingerprint,
 
                                         color: Colors.blue,
                                       ),
 
-                                    SizedBox(width: 10),
+                                    const SizedBox(width: 10),
 
                                     Text(
                                       controller.isLoading.value
                                           ? "Memproses..."
                                           : "Submit Absensi",
 
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),

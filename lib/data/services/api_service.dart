@@ -1,12 +1,12 @@
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
 
   late Dio _dio;
 
-  // 🔥 GANTI DENGAN IP LAPTOP KAMU
-  static const String baseUrl = 'http://10.75.85.242:8000/api/v1';
+  static const String baseUrl = 'http://192.168.18.27:8000/api/v1';
 
   ApiService._internal() {
     _initializeDio();
@@ -20,24 +20,36 @@ class ApiService {
     _dio = Dio(
       BaseOptions(
         baseUrl: baseUrl,
+
         connectTimeout: const Duration(seconds: 15),
+
         receiveTimeout: const Duration(seconds: 15),
 
-        // 🔥 DEFAULT HEADER
         headers: {'Accept': 'application/json'},
       ),
     );
 
-    // 🔥 INTERCEPTOR LOGGING
     _dio.interceptors.add(
       InterceptorsWrapper(
-        onRequest: (options, handler) {
+        onRequest: (options, handler) async {
+          // 🔥 LOAD TOKEN SETIAP REQUEST
+          final prefs = await SharedPreferences.getInstance();
+
+          final token = prefs.getString('token');
+
+          if (token != null) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+
           print('🔥 REQUEST => ${options.method} ${options.uri}');
+
+          print('🔥 TOKEN => ${options.headers['Authorization']}');
 
           print('🔥 DATA => ${options.data}');
 
           return handler.next(options);
         },
+
         onResponse: (response, handler) {
           print('✅ RESPONSE => ${response.statusCode}');
 
@@ -45,6 +57,7 @@ class ApiService {
 
           return handler.next(response);
         },
+
         onError: (error, handler) {
           print('❌ ERROR => ${error.response?.statusCode}');
 
@@ -56,20 +69,29 @@ class ApiService {
     );
   }
 
-  // 🔥 SET TOKEN
-  void setToken(String token) {
+  // 🔥 SIMPAN TOKEN
+  Future<void> setToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setString('token', token);
+
     _dio.options.headers['Authorization'] = 'Bearer $token';
+
+    print('✅ TOKEN SAVED => $token');
   }
 
-  // 🔥 CLEAR TOKEN
-  void clearToken() {
+  // 🔥 HAPUS TOKEN
+  Future<void> clearToken() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.remove('token');
+
     _dio.options.headers.remove('Authorization');
   }
 
-  // 🔥 GET DIO INSTANCE
   Dio get dio => _dio;
 
-  // 🔥 GET REQUEST
+  // 🔥 GET
   Future<Response> get(
     String endpoint, {
     Map<String, dynamic>? queryParameters,
@@ -86,7 +108,7 @@ class ApiService {
     }
   }
 
-  // 🔥 POST REQUEST
+  // 🔥 POST
   Future<Response> post(String endpoint, {dynamic data}) async {
     try {
       final response = await _dio.post(endpoint, data: data);
@@ -97,7 +119,7 @@ class ApiService {
     }
   }
 
-  // 🔥 PUT REQUEST
+  // 🔥 PUT
   Future<Response> put(String endpoint, {dynamic data}) async {
     try {
       final response = await _dio.put(endpoint, data: data);
@@ -108,7 +130,7 @@ class ApiService {
     }
   }
 
-  // 🔥 DELETE REQUEST
+  // 🔥 DELETE
   Future<Response> delete(String endpoint) async {
     try {
       final response = await _dio.delete(endpoint);

@@ -1,9 +1,12 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:get/get.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:latlong2/latlong.dart';
+
 import '../auth/dashboard_controller.dart';
 
 import '../../../core/widgets/app_card.dart';
@@ -19,7 +22,6 @@ class CheckOutPage extends StatefulWidget {
 class _CheckOutPageState extends State<CheckOutPage> {
   final controller = Get.find<AttendanceController>();
 
-  String? fakeLocation;
   String? fakeImage;
 
   double? latitude;
@@ -63,9 +65,7 @@ class _CheckOutPageState extends State<CheckOutPage> {
     latitude = position.latitude;
     longitude = position.longitude;
 
-    setState(() {
-      fakeLocation = "Lat: ${position.latitude}\nLng: ${position.longitude}";
-    });
+    setState(() {});
   }
 
   // 🔥 CAMERA
@@ -116,81 +116,12 @@ class _CheckOutPageState extends State<CheckOutPage> {
       dashboardController.update();
 
       Get.snackbar(
-        "",
+        "Berhasil",
+        "Check-out berhasil dicatat",
 
-        "",
+        backgroundColor: Colors.green,
 
-        snackPosition: SnackPosition.TOP,
-
-        backgroundColor: Colors.transparent,
-
-        margin: const EdgeInsets.all(16),
-
-        duration: const Duration(seconds: 2),
-
-        titleText: Container(
-          padding: const EdgeInsets.all(16),
-
-          decoration: BoxDecoration(
-            color: Colors.white,
-
-            borderRadius: BorderRadius.circular(16),
-
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-
-                blurRadius: 10,
-
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-
-                decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
-
-                  shape: BoxShape.circle,
-                ),
-
-                child: const Icon(Icons.check, color: Colors.green),
-              ),
-
-              const SizedBox(width: 12),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-
-                  children: [
-                    const Text(
-                      "Berhasil",
-
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-
-                        fontSize: 14,
-                      ),
-                    ),
-
-                    const SizedBox(height: 4),
-
-                    Text(
-                      "Check-out berhasil dicatat",
-
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+        colorText: Colors.white,
       );
 
       Future.delayed(const Duration(seconds: 2), () {
@@ -258,22 +189,127 @@ class _CheckOutPageState extends State<CheckOutPage> {
                             const SizedBox(height: 10),
 
                             Container(
-                              height: 100,
+                              height: 250,
 
                               width: double.infinity,
 
                               decoration: BoxDecoration(
                                 color: Colors.grey[200],
 
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(16),
                               ),
 
-                              child: Center(
-                                child: fakeLocation == null
-                                    ? const Text("Belum ada lokasi")
-                                    : Text(fakeLocation!),
-                              ),
+                              child: latitude == null
+                                  ? const Center(
+                                      child: Text("Belum ada lokasi"),
+                                    )
+                                  : ClipRRect(
+                                      borderRadius: BorderRadius.circular(16),
+
+                                      child: FlutterMap(
+                                        options: MapOptions(
+                                          initialCenter: LatLng(
+                                            latitude!,
+                                            longitude!,
+                                          ),
+
+                                          initialZoom: 16,
+                                        ),
+
+                                        children: [
+                                          TileLayer(
+                                            urlTemplate:
+                                                'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+
+                                            userAgentPackageName:
+                                                'com.example.absensi_guru',
+                                          ),
+
+                                          CircleLayer(
+                                            circles: [
+                                              CircleMarker(
+                                                point: LatLng(
+                                                  latitude!,
+                                                  longitude!,
+                                                ),
+
+                                                radius: 100,
+
+                                                color: Colors.blue.withValues(
+                                                  alpha: 0.2,
+                                                ),
+
+                                                borderStrokeWidth: 2,
+
+                                                borderColor: Colors.blue,
+                                              ),
+                                            ],
+                                          ),
+
+                                          MarkerLayer(
+                                            markers: [
+                                              Marker(
+                                                point: LatLng(
+                                                  latitude!,
+                                                  longitude!,
+                                                ),
+
+                                                width: 80,
+
+                                                height: 80,
+
+                                                child: Column(
+                                                  children: [
+                                                    const Icon(
+                                                      Icons.location_on,
+
+                                                      color: Colors.red,
+
+                                                      size: 40,
+                                                    ),
+
+                                                    Container(
+                                                      padding:
+                                                          const EdgeInsets.symmetric(
+                                                            horizontal: 8,
+                                                            vertical: 4,
+                                                          ),
+
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.white,
+
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              8,
+                                                            ),
+                                                      ),
+
+                                                      child: const Text(
+                                                        "Lokasi Anda",
+
+                                                        style: TextStyle(
+                                                          fontSize: 10,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                             ),
+
+                            const SizedBox(height: 10),
+
+                            if (latitude != null)
+                              Align(
+                                alignment: Alignment.centerLeft,
+
+                                child: Text("Lat: $latitude\nLng: $longitude"),
+                              ),
 
                             const SizedBox(height: 15),
 
@@ -344,25 +380,27 @@ class _CheckOutPageState extends State<CheckOutPage> {
                             const SizedBox(height: 10),
 
                             Container(
-                              height: 150,
+                              height: 250,
 
                               width: double.infinity,
 
                               decoration: BoxDecoration(
                                 color: Colors.grey[200],
 
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(16),
                               ),
 
                               child: fakeImage == null
                                   ? const Center(child: Text("Belum ada foto"))
                                   : ClipRRect(
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(16),
 
                                       child: Image.file(
                                         File(fakeImage!),
 
                                         fit: BoxFit.cover,
+
+                                        width: double.infinity,
                                       ),
                                     ),
                             ),
@@ -454,6 +492,7 @@ class _CheckOutPageState extends State<CheckOutPage> {
                                     if (controller.isLoading.value)
                                       const SizedBox(
                                         width: 20,
+
                                         height: 20,
 
                                         child: CircularProgressIndicator(
@@ -463,6 +502,7 @@ class _CheckOutPageState extends State<CheckOutPage> {
                                     else
                                       const Icon(
                                         Icons.logout,
+
                                         color: Colors.blue,
                                       ),
 

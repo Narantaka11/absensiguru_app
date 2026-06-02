@@ -17,7 +17,7 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   final controller = Get.put(DashboardController());
 
-  final List<Widget> pages = const [
+  final List<Widget> pages = [
     HomeContent(),
     SchedulePage(),
     HistoryPage(),
