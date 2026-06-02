@@ -308,23 +308,6 @@ class ProfilePage extends StatelessWidget {
                   AppCard(
                     child: Column(
                       children: [
-                        actionItem(Icons.refresh, "Refresh Profile", () async {
-                          await attendanceController.getCurrentUserData();
-
-                          await attendanceController.getAssessments();
-
-                          Get.snackbar(
-                            "Success",
-                            "Data berhasil diperbarui",
-
-                            backgroundColor: Colors.green,
-
-                            colorText: Colors.white,
-                          );
-                        }),
-
-                        const Divider(),
-
                         actionItem(Icons.logout, "Logout", () async {
                           await attendanceController.logout();
 
