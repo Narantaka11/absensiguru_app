@@ -6,7 +6,7 @@ class ApiService {
 
   late Dio _dio;
 
-  static const String baseUrl = 'http://192.168.18.27:8000/api/v1';
+  static const String baseUrl = 'http://192.168.18.119:8000/api/v1';
 
   ApiService._internal() {
     _initializeDio();
@@ -36,6 +36,10 @@ class ApiService {
           final prefs = await SharedPreferences.getInstance();
 
           final token = prefs.getString('token');
+
+          print("================================");
+          print("TOKEN DARI SHARED PREFS = $token");
+          print("================================");
 
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';

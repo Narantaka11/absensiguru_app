@@ -39,9 +39,7 @@ class ProfilePage extends StatelessWidget {
 
                 children: [
                   // 🔥 HEADER
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
+                  const Row(
                     children: [
                       const Text(
                         "Profile",
@@ -50,26 +48,6 @@ class ProfilePage extends StatelessWidget {
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
-                      ),
-
-                      Container(
-                        padding: const EdgeInsets.all(10),
-
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-
-                          borderRadius: BorderRadius.circular(12),
-
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-
-                              blurRadius: 10,
-                            ),
-                          ],
-                        ),
-
-                        child: const Icon(Icons.settings),
                       ),
                     ],
                   ),
@@ -164,27 +142,61 @@ class ProfilePage extends StatelessWidget {
 
                         const SizedBox(height: 5),
 
-                        // 🔥 ROLE
-                        Text(
-                          user?.role ?? "Guru",
+                        Column(
+                          children: [
+                            Text(
+                              user?.teacher?.subject ?? "-",
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 15,
+                              ),
+                            ),
 
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.9),
-                          ),
+                            const SizedBox(height: 4),
+
+                            Text(
+                              "NIP ${user?.teacher?.nip ?? '-'}",
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
 
                   const SizedBox(height: 25),
+                  const Text(
+                    "Informasi Guru",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
 
+                  const SizedBox(height: 15),
                   // 🔥 DETAIL INFO
                   AppCard(
                     child: Column(
                       children: [
                         profileItem(Icons.email, "Email", user?.email ?? "-"),
 
-                        profileItem(Icons.badge, "Role", user?.role ?? "-"),
+                        profileItem(
+                          Icons.badge,
+                          "NIP",
+                          user?.teacher?.nip ?? "-",
+                        ),
+
+                        profileItem(
+                          Icons.menu_book,
+                          "Mata Pelajaran",
+                          user?.teacher?.subject ?? "-",
+                        ),
+
+                        profileItem(
+                          Icons.work,
+                          "Status",
+                          user?.teacher?.status ?? "-",
+                        ),
                       ],
                     ),
                   ),
@@ -193,132 +205,299 @@ class ProfilePage extends StatelessWidget {
 
                   // 🔥 TITLE
                   const Text(
-                    "Riwayat Penilaian",
-
+                    "Peringkat Kinerja",
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
 
                   const SizedBox(height: 15),
 
-                  // 🔥 ASSESSMENT LIST
                   Obx(() {
                     final assessments = attendanceController.assessments;
 
                     if (assessments.isEmpty) {
                       return Container(
                         width: double.infinity,
-
                         padding: const EdgeInsets.all(20),
-
                         decoration: BoxDecoration(
                           color: Colors.white,
-
                           borderRadius: BorderRadius.circular(20),
                         ),
-
-                        child: const Center(child: Text("Belum ada penilaian")),
+                        child: const Center(
+                          child: Text("Belum ada data penilaian"),
+                        ),
                       );
                     }
 
-                    return Column(
-                      children: assessments.map((item) {
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 15),
+                    final latest = assessments.first;
 
-                          padding: const EdgeInsets.all(18),
+                    Color rankColor = Colors.blue;
+                    IconData rankIcon = Icons.emoji_events;
 
-                          decoration: BoxDecoration(
-                            color: Colors.white,
+                    if (latest.ranking == 1) {
+                      rankColor = Colors.amber;
+                    } else if (latest.ranking == 2) {
+                      rankColor = Colors.grey;
+                    } else if (latest.ranking == 3) {
+                      rankColor = Colors.brown;
+                    }
 
-                            borderRadius: BorderRadius.circular(20),
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                          ),
+                        ],
+                      ),
 
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.05),
+                      child: Column(
+                        children: [
+                          Icon(rankIcon, size: 40, color: rankColor),
 
-                                blurRadius: 10,
-                              ),
-                            ],
+                          const SizedBox(height: 10),
+
+                          Text(
+                            "#${latest.ranking}",
+                            style: TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.bold,
+                              color: rankColor,
+                            ),
                           ),
 
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          const SizedBox(height: 5),
 
-                            children: [
-                              // 🔥 HEADER
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                          const Text(
+                            "Ranking Saat Ini",
+                            style: TextStyle(color: Colors.grey),
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          Divider(),
+
+                          const SizedBox(height: 8),
+
+                          rankingItem(
+                            Icons.analytics,
+                            "SAW Score",
+                            latest.sawScore.toStringAsFixed(4),
+                          ),
+
+                          rankingItem(
+                            Icons.star,
+                            "Nilai Akhir",
+                            latest.total.toStringAsFixed(2),
+                          ),
+
+                          rankingItem(
+                            Icons.calendar_month,
+                            "Periode",
+                            "${getMonthName(latest.month)} ${latest.year}",
+                          ),
+
+                          rankingItem(
+                            Icons.workspace_premium,
+                            "Kategori",
+                            latest.sawScore >= 0.90
+                                ? "Sangat Baik"
+                                : latest.sawScore >= 0.80
+                                ? "Baik"
+                                : latest.sawScore >= 0.70
+                                ? "Cukup"
+                                : "Perlu Pembinaan",
+                          ),
+
+                          const SizedBox(height: 15),
+
+                          LinearProgressIndicator(
+                            value: latest.sawScore,
+                            minHeight: 10,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+
+                  const SizedBox(height: 24),
+
+                  // ======================
+                  // SLIP GAJI
+                  // ======================
+                  AppCard(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: () {
+                        final salary = attendanceController.salary.value;
+
+                        if (salary == null) {
+                          Get.snackbar("Info", "Slip gaji belum tersedia");
+                          return;
+                        }
+
+                        Get.bottomSheet(
+                          Container(
+                            padding: const EdgeInsets.all(24),
+
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(24),
+                                topRight: Radius.circular(24),
+                              ),
+                            ),
+
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+
+                              children: [
+                                Container(
+                                  width: 60,
+                                  height: 5,
+
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade300,
+
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                ),
+
+                                const SizedBox(height: 20),
+
+                                const Icon(
+                                  Icons.receipt_long,
+                                  size: 50,
+                                  color: Colors.green,
+                                ),
+
+                                const SizedBox(height: 10),
+
+                                Text(
+                                  salary.monthName,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  ),
+                                ),
+
+                                const SizedBox(height: 20),
+
+                                rankingItem(
+                                  Icons.payments,
+                                  "Gaji Pokok",
+                                  "Rp ${salary.baseSalary.toStringAsFixed(0)}",
+                                ),
+
+                                rankingItem(
+                                  Icons.remove_circle_outline,
+                                  "Potongan",
+                                  "Rp ${salary.totalDeduction.toStringAsFixed(0)}",
+                                ),
+
+                                rankingItem(
+                                  Icons.account_balance_wallet,
+                                  "Total Gaji",
+                                  "Rp ${salary.totalSalary.toStringAsFixed(0)}",
+                                ),
+
+                                rankingItem(
+                                  Icons.info_outline,
+                                  "Status",
+                                  salary.statusLabel,
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+
+                        child: Row(
+                          children: [
+                            const Icon(Icons.receipt_long, color: Colors.green),
+
+                            const SizedBox(width: 12),
+
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
 
                                 children: [
-                                  Text(
-                                    "${getMonthName(item.month)} ${item.year}",
-
-                                    style: const TextStyle(
+                                  const Text(
+                                    "Slip Gaji",
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
-
-                                      fontSize: 16,
                                     ),
                                   ),
 
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 6,
-                                    ),
-
-                                    decoration: BoxDecoration(
-                                      color: Colors.blue,
-
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-
-                                    child: Text(
-                                      item.total.toStringAsFixed(2),
-
-                                      style: const TextStyle(
-                                        color: Colors.white,
-
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                  Text(
+                                    attendanceController.salary.value != null
+                                        ? "${attendanceController.salary.value!.monthName} • ${attendanceController.salary.value!.statusLabel}"
+                                        : "Belum tersedia",
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 12,
                                     ),
                                   ),
                                 ],
                               ),
+                            ),
 
-                              const SizedBox(height: 15),
-
-                              scoreItem("Absensi", item.absensi),
-
-                              scoreItem("Disiplin", item.disiplin),
-
-                              scoreItem("Keterampilan", item.keterampilan),
-
-                              scoreItem("Produktivitas", item.produktivitas),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                    );
-                  }),
-
-                  const SizedBox(height: 25),
-
-                  // 🔥 MENU
-                  AppCard(
-                    child: Column(
-                      children: [
-                        actionItem(Icons.logout, "Logout", () async {
-                          await attendanceController.logout();
-
-                          Get.offAll(() => LoginPage());
-                        }),
-                      ],
+                            const Icon(Icons.chevron_right),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
 
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 16),
 
+                  // ======================
+                  // LOGOUT
+                  // ======================
+                  AppCard(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(16),
+
+                      onTap: () async {
+                        await attendanceController.logout();
+
+                        Get.offAll(() => const LoginPage());
+                      },
+
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8),
+
+                        child: Row(
+                          children: [
+                            Icon(Icons.logout, color: Colors.red),
+
+                            SizedBox(width: 12),
+
+                            Expanded(
+                              child: Text(
+                                "Logout",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+
+                            Icon(Icons.chevron_right),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
                   // 🔥 VERSION
                   Center(
                     child: Text(
@@ -405,6 +584,23 @@ class ProfilePage extends StatelessWidget {
 
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget rankingItem(IconData icon, String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.blue, size: 20),
+
+          const SizedBox(width: 10),
+
+          Expanded(child: Text(title)),
+
+          Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
         ],
       ),
     );

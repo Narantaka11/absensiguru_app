@@ -63,40 +63,48 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.all(20),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            20,
+            20,
+            MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
           child: Column(
             children: [
               // 🔥 HERO SECTION
               Container(
                 width: double.infinity,
-                padding: EdgeInsets.all(20),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: Colors.blue.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
                   children: [
-                    Icon(Icons.school, size: 50, color: Colors.blue),
-                    SizedBox(height: 10),
-                    Text(
-                      "Absensi Guru",
+                    Image.asset('assets/images/logo-sekolah.png', height: 70),
+                    const SizedBox(height: 12),
+                    const Text(
+                      "Absensiku",
                       style: TextStyle(
+                        fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        fontSize: 18,
                       ),
                     ),
-                    SizedBox(height: 5),
+                    const SizedBox(height: 6),
                     Text(
                       "Kelola kehadiran dengan mudah & cepat",
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 14,
+                      ),
                     ),
                   ],
                 ),
               ),
-
               SizedBox(height: 25),
 
               // 🔹 FORM
@@ -199,9 +207,7 @@ class _LoginPageState extends State<LoginPage> {
                   ],
                 ),
               ),
-
-              Spacer(),
-
+              SizedBox(height: 20),
               // 🔥 FOOTER
               Text(
                 "© 2026 Sistem Absensi Guru",

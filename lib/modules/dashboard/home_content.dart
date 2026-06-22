@@ -32,19 +32,19 @@ class _HomeContentState extends State<HomeContent> {
   Widget build(BuildContext context) {
     final List<Map<String, String>> banners = [
       {
-        "image": "https://picsum.photos/400/200?1",
+        "image": "assets/images/banner2.jpg",
         "title": "Rapat Guru",
-        "desc": "Hari ini jam 10:00 di ruang meeting",
+        "desc": "Hari ini jam 10:00 di Ruang Meeting",
       },
 
       {
-        "image": "https://picsum.photos/400/200?2",
+        "image": "assets/images/banner2.jpg",
         "title": "Pengumpulan Nilai",
-        "desc": "Deadline hari Jumat",
+        "desc": "Deadline Hari Jumat",
       },
 
       {
-        "image": "https://picsum.photos/400/200?3",
+        "image": "assets/images/banner2.jpg",
         "title": "Libur Nasional",
         "desc": "Tanggal 17 Agustus",
       },
@@ -378,7 +378,7 @@ class _HomeContentState extends State<HomeContent> {
                         ClipRRect(
                           borderRadius: BorderRadius.circular(20),
 
-                          child: Image.network(
+                          child: Image.asset(
                             item["image"]!,
 
                             width: double.infinity,

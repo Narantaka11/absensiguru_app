@@ -6,6 +6,8 @@ import '../../data/models/assessment_model.dart';
 import '../../data/services/auth_repository.dart';
 import '../../data/services/presence_repository.dart';
 import '../../data/services/assessment_repository.dart';
+import '../../data/models/salary_model.dart';
+import '../../data/services/salary_repository.dart';
 
 class AttendanceModel {
   final DateTime dateTime;
@@ -23,6 +25,10 @@ class AttendanceController extends GetxController {
   final PresenceRepository _presenceRepository = PresenceRepository();
 
   final AssessmentRepository _assessmentRepository = AssessmentRepository();
+
+  final SalaryRepository _salaryRepository = SalaryRepository();
+
+  Rx<SalaryModel?> salary = Rx<SalaryModel?>(null);
 
   // 🔥 STATE MANAGEMENT
   var isLoading = false.obs;
@@ -51,9 +57,6 @@ class AttendanceController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-
-    getCurrentUserData();
-    getAssessments();
   }
 
   // 🔥 LOGIN API
@@ -69,7 +72,9 @@ class AttendanceController extends GetxController {
         currentUser.value = response.user;
 
         // 🔥 LOAD ASSESSMENTS
+        await getCurrentUserData();
         await getAssessments();
+        await getSalary();
 
         return true;
       } else {
@@ -282,5 +287,15 @@ class AttendanceController extends GetxController {
     }
 
     return data.first.status;
+  }
+
+  Future<void> getSalary() async {
+    try {
+      final result = await _salaryRepository.getMySalary();
+
+      salary.value = result;
+    } catch (e) {
+      print(e);
+    }
   }
 }

@@ -23,6 +23,26 @@ class LoginResponse {
   }
 }
 
+class Teacher {
+  final String? nip;
+  final String? subject;
+  final String? status;
+
+  Teacher({this.nip, this.subject, this.status});
+
+  factory Teacher.fromJson(Map<String, dynamic> json) {
+    return Teacher(
+      nip: json['nip'],
+      subject: json['subject'],
+      status: json['status'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'nip': nip, 'subject': subject, 'status': status};
+  }
+}
+
 class User {
   final int id;
   final String name;
@@ -31,6 +51,7 @@ class User {
   final String? address;
   final String? role;
   final String? profileImage;
+  final Teacher? teacher;
 
   User({
     required this.id,
@@ -40,6 +61,7 @@ class User {
     this.address,
     this.role,
     this.profileImage,
+    this.teacher,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -51,6 +73,10 @@ class User {
       address: json['address'],
       role: json['role'],
       profileImage: json['profile_image'],
+
+      teacher: json['teacher'] != null
+          ? Teacher.fromJson(json['teacher'])
+          : null,
     );
   }
 
@@ -63,6 +89,7 @@ class User {
       'address': address,
       'role': role,
       'profile_image': profileImage,
+      'teacher': teacher?.toJson(),
     };
   }
 }
@@ -73,6 +100,7 @@ class PresenceResponse {
   final Presence? data;
   final bool hasCheckedIn;
   final bool hasCheckedOut;
+
   PresenceResponse({
     required this.success,
     required this.message,
@@ -80,8 +108,10 @@ class PresenceResponse {
     this.hasCheckedIn = false,
     this.hasCheckedOut = false,
   });
+
   factory PresenceResponse.fromJson(Map<String, dynamic> json) {
     final responseData = json['data'];
+
     return PresenceResponse(
       success: json['success'] ?? false,
       message: json['message'] ?? '',
@@ -97,12 +127,16 @@ class PresenceResponse {
 class Presence {
   final int id;
   final int userId;
+
   final String? checkInTime;
   final String? checkOutTime;
+
   final String? checkInLocation;
   final String? checkOutLocation;
+
   final String? checkInPhoto;
   final String? checkOutPhoto;
+
   final String status;
   final String date;
 
@@ -123,13 +157,20 @@ class Presence {
     return Presence(
       id: json['id'] ?? 0,
       userId: json['user_id'] ?? 0,
+
       checkInTime: json['check_in']?['time'],
       checkOutTime: json['check_out']?['time'],
+
       checkInLocation: json['check_in_location'],
+
       checkOutLocation: json['check_out_location'],
+
       checkInPhoto: json['check_in_photo'],
+
       checkOutPhoto: json['check_out_photo'],
+
       status: json['status'] ?? '',
+
       date: json['presence_date'] ?? '',
     );
   }

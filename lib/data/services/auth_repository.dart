@@ -17,8 +17,7 @@ class AuthRepository {
 
       // 🔥 JIKA LOGIN BERHASIL, SIMPAN TOKEN
       if (loginResponse.token != null) {
-        await
-        _apiService.setToken(loginResponse.token!);
+        await _apiService.setToken(loginResponse.token!);
       }
 
       return loginResponse;
@@ -35,7 +34,7 @@ class AuthRepository {
       if (response.statusCode == 200) {
         final data = response.data;
         if (data['success'] && data['data'] != null) {
-          return User.fromJson(data['data']);
+          return User.fromJson(data['data']['user']);
         }
       }
       return null;
